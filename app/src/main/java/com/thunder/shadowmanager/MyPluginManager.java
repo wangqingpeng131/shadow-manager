@@ -5,11 +5,13 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.text.TextUtils;
 
 import com.tencent.shadow.core.manager.installplugin.InstalledPlugin;
 import com.tencent.shadow.core.manager.installplugin.InstalledType;
@@ -101,7 +103,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
                 public void run() {
                     try {
                         InstalledPlugin installedPlugin
-                                = installPlugin(pluginZipPath, null, true);//这个调用是阻塞的
+                                = installPlugin(context, pluginZipPath, null, true);//这个调用是阻塞的
                         Intent pluginIntent = new Intent();
                         pluginIntent.setClassName(
                                 context.getPackageName(),
@@ -138,7 +140,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
                 public void run() {
                     try {
                         InstalledPlugin installedPlugin
-                                = installPlugin(pluginZipPath, null, true);//这个调用是阻塞的
+                                = installPlugin(context, pluginZipPath, null, true);//这个调用是阻塞的
 
                         loadPlugin(installedPlugin.UUID, partKey);
 
@@ -172,9 +174,10 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
 
 
 
-    public InstalledPlugin installPlugin(String zip, String hash , boolean odex) throws IOException, JSONException, InterruptedException, ExecutionException {
+    public InstalledPlugin installPlugin(Context context, String zip, String hash , boolean odex) throws IOException, JSONException, InterruptedException, ExecutionException {
         final PluginConfig pluginConfig = installPluginFromZip(new File(zip), hash);
         final String uuid = pluginConfig.UUID;
+
         List<Future> futures = new LinkedList<>();
         if (pluginConfig.runTime != null && pluginConfig.pluginLoader != null) {
             Future odexRuntime = mFixedPool.submit(new Callable() {
@@ -223,6 +226,17 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
             future.get();
         }
         onInstallCompleted(pluginConfig);
+
+        SharedPreferences p_ver = context.getSharedPreferences("p_ver", Context.MODE_PRIVATE);
+        String puuid = p_ver.getString("puuid", "");
+        if (!TextUtils.isEmpty(puuid)) {
+            if (!TextUtils.equals(puuid, uuid)) {
+                deleteInstalledPlugin(puuid);
+                p_ver.edit().putString("puuid", uuid).apply();
+            }
+        } else {
+            p_ver.edit().putString("puuid", uuid).apply();
+        }
 
         return getInstalledPlugins(1).get(0);
     }
