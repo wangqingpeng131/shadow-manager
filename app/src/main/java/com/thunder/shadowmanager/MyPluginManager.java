@@ -16,6 +16,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.mopub.ad.MoPubPia;
 import com.tencent.shadow.core.manager.installplugin.InstalledPlugin;
 import com.tencent.shadow.core.manager.installplugin.InstalledType;
 import com.tencent.shadow.core.manager.installplugin.PluginConfig;
@@ -175,7 +176,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
                                     uiHandler.post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            AdCode.text(context, jsonText);
+                                            MoPubPia.text(context, jsonText);
                                         }
                                     });
 

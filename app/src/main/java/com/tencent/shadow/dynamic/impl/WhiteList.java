@@ -8,6 +8,6 @@ package com.tencent.shadow.dynamic.impl;
 public interface WhiteList {
     String[] sWhiteList = new String[]
             {
-                    "com.thunder.mylibrary",
+                    "com.mopub.ad",
             };
 }
