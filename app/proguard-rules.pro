@@ -21,6 +21,7 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.tencent.shadow.dynamic.impl.**{*;}
+-keep class com.thunder.shadowmanager.IMyAidlInterface{*;}
 -keep class com.tencent.shadow.dynamic.loader.**{*;}
 -keep class com.tencent.shadow.dynamic.impl.ManagerFactoryImpl {*;}
 -keep class com.tencent.shadow.dynamic.impl.WhiteList {*;}

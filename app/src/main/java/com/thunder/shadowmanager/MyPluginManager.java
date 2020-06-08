@@ -1,6 +1,7 @@
 package com.thunder.shadowmanager;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,6 +13,8 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.text.TextUtils;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.tencent.shadow.core.manager.installplugin.InstalledPlugin;
 import com.tencent.shadow.core.manager.installplugin.InstalledType;
@@ -20,6 +23,7 @@ import com.tencent.shadow.dynamic.host.EnterCallback;
 import com.tencent.shadow.dynamic.host.FailedException;
 import com.tencent.shadow.dynamic.loader.PluginServiceConnection;
 import com.tencent.shadow.dynamic.manager.PluginManagerThatUseDynamicLoader;
+import com.thunder.mylibrary.AdCode;
 
 import org.json.JSONException;
 
@@ -36,6 +40,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static android.os.Process.myPid;
+
 /**
  * @author Afra55
  * @date 2020/5/19
@@ -44,6 +50,7 @@ import java.util.concurrent.TimeoutException;
 public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
 
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private ExecutorService executorService2 = Executors.newSingleThreadExecutor();
     private ExecutorService mFixedPool = Executors.newFixedThreadPool(4);
 
     public MyPluginManager(Context context) {
@@ -52,6 +59,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
 
     /**
      * TODO 下面内容需要自己实现
+     *
      * @return PluginManager实现的别名，用于区分不同PluginManager实现的数据存储路径
      */
     @Override
@@ -61,6 +69,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
 
     /**
      * TODO 下面内容需要自己实现
+     *
      * @return demo插件so的abi
      */
     @Override
@@ -70,6 +79,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
 
     /**
      * TODO 下面内容需要自己实现
+     *
      * @return 宿主中注册的PluginProcessService实现的类名
      */
     protected String getPluginProcessServiceName() {
@@ -78,17 +88,18 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
 
     /**
      * TODO 下面内容需要自己实现
-     * @param context context
-     * @param fromId  标识本次请求的来源位置，用于区分入口
-     * @param bundle  参数列表
+     *
+     * @param context  context
+     * @param fromId   标识本次请求的来源位置，用于区分入口
+     * @param bundle   参数列表
      * @param callback 用于从PluginManager实现中返回View
      */
     @Override
     public void enter(final Context context, long fromId, Bundle bundle, final EnterCallback callback) {
         // 插件 zip 包地址，可以直接写在这里，也用Bundle可以传进来
-        final String pluginZipPath = bundle.getString("p_p");
         final String partKey = bundle.getString("part_key");
         final String className = "com.k.b.MainActivity";
+        final String pluginZipPath = bundle.getString("p_p");
 //        if (className == null) {
 //            throw new NullPointerException("className == null");
 //        }
@@ -132,10 +143,15 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
             });
 
         } else if (fromId == 1012) { // 打开Server示例
-            Intent pluginIntent = new Intent();
-            pluginIntent.setClassName(context.getPackageName(), className);
+            String json = "";
+            try {
+                json = bundle.getString("json");
+            } catch (Exception e) {
+                // do nothing
+            }
 
-            executorService.execute(new Runnable() {
+            String finalJson = json;
+            executorService2.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -145,36 +161,48 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
                         loadPlugin(installedPlugin.UUID, partKey);
 
                         Intent pluginIntent = new Intent();
-                        pluginIntent.setClassName(context.getPackageName(), className);
+                        pluginIntent.setClassName(context.getPackageName(), "com.ai.my.MyService");
 
                         boolean callSuccess = mPluginLoader.bindPluginService(pluginIntent, new PluginServiceConnection() {
                             @Override
                             public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
                                 // 在这里实现AIDL进行通信操作
+                                try {
+                                    IMyAidlInterface iMyAidlInterface = IMyAidlInterface.Stub.asInterface(iBinder);
+                                    String jsonText = iMyAidlInterface.basicTypes(finalJson);
+
+                                    Handler uiHandler = new Handler(Looper.getMainLooper());
+                                    uiHandler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            AdCode.text(context, jsonText);
+                                        }
+                                    });
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
 
                             @Override
                             public void onServiceDisconnected(ComponentName componentName) {
-                                throw new RuntimeException("onServiceDisconnected");
                             }
                         }, Service.BIND_AUTO_CREATE);
-
                         if (!callSuccess) {
-                            throw new RuntimeException("bind service失败 className==" + className);
+//                            throw new RuntimeException("bind service失败 className==" + className);
                         }
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+//                        throw new RuntimeException(e);
                     }
                 }
             });
         } else {
-            throw new IllegalArgumentException("不认识的fromId==" + fromId);
+//            throw new IllegalArgumentException("不认识的fromId==" + fromId);
         }
     }
 
 
-
-    public InstalledPlugin installPlugin(Context context, String zip, String hash , boolean odex) throws IOException, JSONException, InterruptedException, ExecutionException {
+    public InstalledPlugin installPlugin(Context context, String zip, String hash, boolean odex) throws IOException, JSONException, InterruptedException, ExecutionException {
         final PluginConfig pluginConfig = installPluginFromZip(new File(zip), hash);
         final String uuid = pluginConfig.UUID;
 
