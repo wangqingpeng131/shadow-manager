@@ -1,7 +1,6 @@
 package com.thunder.shadowmanager;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,8 +12,6 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.text.TextUtils;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.mopub.ad.MoPubPia;
 import com.tencent.shadow.core.manager.installplugin.InstalledPlugin;
@@ -24,8 +21,6 @@ import com.tencent.shadow.dynamic.host.EnterCallback;
 import com.tencent.shadow.dynamic.host.FailedException;
 import com.tencent.shadow.dynamic.loader.PluginServiceConnection;
 import com.tencent.shadow.dynamic.manager.PluginManagerThatUseDynamicLoader;
-import com.thunder.mylibrary.AdCode;
-
 import org.json.JSONException;
 
 import java.io.File;
@@ -40,8 +35,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static android.os.Process.myPid;
 
 /**
  * @author Afra55
@@ -84,7 +77,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
      * @return 宿主中注册的PluginProcessService实现的类名
      */
     protected String getPluginProcessServiceName() {
-        return "com.thunder.shadowmaster.PProcessService";
+        return "com.viewup.bestlikes.PProcessService";
     }
 
     /**
@@ -143,62 +136,6 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
                 }
             });
 
-        } else if (fromId == 1012) { // 打开Server示例
-            String json = "";
-            try {
-                json = bundle.getString("json");
-            } catch (Exception e) {
-                // do nothing
-            }
-
-            String finalJson = json;
-            executorService2.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        InstalledPlugin installedPlugin
-                                = installPlugin(context, pluginZipPath, null, true);//这个调用是阻塞的
-
-                        loadPlugin(installedPlugin.UUID, partKey);
-
-                        Intent pluginIntent = new Intent();
-                        pluginIntent.setClassName(context.getPackageName(), "com.ai.my.MyService");
-
-                        boolean callSuccess = mPluginLoader.bindPluginService(pluginIntent, new PluginServiceConnection() {
-                            @Override
-                            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-                                // 在这里实现AIDL进行通信操作
-                                try {
-                                    IMyAidlInterface iMyAidlInterface = IMyAidlInterface.Stub.asInterface(iBinder);
-                                    String jsonText = iMyAidlInterface.basicTypes(finalJson);
-
-                                    Handler uiHandler = new Handler(Looper.getMainLooper());
-                                    uiHandler.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            MoPubPia.text(context, jsonText);
-                                        }
-                                    });
-
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            @Override
-                            public void onServiceDisconnected(ComponentName componentName) {
-                            }
-                        }, Service.BIND_AUTO_CREATE);
-                        if (!callSuccess) {
-//                            throw new RuntimeException("bind service失败 className==" + className);
-                        }
-                    } catch (Exception e) {
-//                        throw new RuntimeException(e);
-                    }
-                }
-            });
-        } else {
-//            throw new IllegalArgumentException("不认识的fromId==" + fromId);
         }
     }
 

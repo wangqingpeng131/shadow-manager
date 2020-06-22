@@ -2,7 +2,7 @@
 
 buildscript {
     ext.kotlin_version = '1.3.61'
-    ext.shadow_version = '2.0.12-cd55646e-SNAPSHOT'
+    ext.shadow_version = '2.0.12--SNAPSHOT'
     repositories {
         google()
         jcenter()

@@ -81,6 +81,6 @@ dependencies {
     compileOnly "com.tencent.shadow.core:common:$shadow_version"
     compileOnly "com.tencent.shadow.dynamic:host:$shadow_version"
 
-    compileOnly files("/Users/victor/Program/Android/Gpower/PluginSpace/ShadowSpace/ShadowMaster/mylibrary/build/outputs/jar/mylibrary-debug.jar")
+    compileOnly files("/Users/xingchi/Downloads/PhotoPaint-enigma/mylibrary/build/outputs/jar/mylibrary-debug.jar")
 
 }
