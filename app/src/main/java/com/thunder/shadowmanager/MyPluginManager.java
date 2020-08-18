@@ -8,18 +8,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.text.TextUtils;
 
-import com.mopub.ad.MoPubPia;
 import com.tencent.shadow.core.manager.installplugin.InstalledPlugin;
 import com.tencent.shadow.core.manager.installplugin.InstalledType;
 import com.tencent.shadow.core.manager.installplugin.PluginConfig;
 import com.tencent.shadow.dynamic.host.EnterCallback;
 import com.tencent.shadow.dynamic.host.FailedException;
-import com.tencent.shadow.dynamic.loader.PluginServiceConnection;
 import com.tencent.shadow.dynamic.manager.PluginManagerThatUseDynamicLoader;
 import org.json.JSONException;
 
