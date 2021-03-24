@@ -1,8 +1,6 @@
 package com.thunder.shadowmanager;
 
 import android.app.Activity;
-import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,7 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.text.TextUtils;
-
 import com.tencent.shadow.core.manager.installplugin.InstalledPlugin;
 import com.tencent.shadow.core.manager.installplugin.InstalledType;
 import com.tencent.shadow.core.manager.installplugin.PluginConfig;
@@ -19,7 +16,6 @@ import com.tencent.shadow.dynamic.host.EnterCallback;
 import com.tencent.shadow.dynamic.host.FailedException;
 import com.tencent.shadow.dynamic.manager.PluginManagerThatUseDynamicLoader;
 import org.json.JSONException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -43,6 +39,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
     private ExecutorService executorService2 = Executors.newSingleThreadExecutor();
     private ExecutorService mFixedPool = Executors.newFixedThreadPool(4);
+    private String mProcessServiceName ="";
 
     public MyPluginManager(Context context) {
         super(context);
@@ -74,7 +71,10 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
      * @return 宿主中注册的PluginProcessService实现的类名
      */
     protected String getPluginProcessServiceName() {
-        return "com.viewup.bestlikes.PProcessService";
+        return mProcessServiceName;
+    }
+    protected void setPluginProcessServiceName(String pluginProcessServiceName){
+        this.mProcessServiceName =pluginProcessServiceName;
     }
 
     /**
@@ -88,24 +88,27 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
     @Override
     public void enter(final Context context, long fromId, Bundle bundle, final EnterCallback callback) {
         // 插件 zip 包地址，可以直接写在这里，也用Bundle可以传进来
+
         final String partKey = bundle.getString("part_key");
+        mProcessServiceName = bundle.getString("process_service_name");
         final String className = "com.k.b.MainActivity";
         final String pluginZipPath = bundle.getString("p_p");
 //        if (className == null) {
 //            throw new NullPointerException("className == null");
 //        }
+
         if (fromId == 1011) { // 打开 Activity 示例
             final Bundle extras = bundle.getBundle("extra_to_plugin_bundle");
             if (callback != null) {
                 // 开始加载插件了，实现加载布局
                 callback.onShowLoadingView(null);
             }
+
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        InstalledPlugin installedPlugin
-                                = installPlugin(context, pluginZipPath, null, true);//这个调用是阻塞的
+                        InstalledPlugin installedPlugin = installPlugin(context, pluginZipPath, null, true);//这个调用是阻塞的
                         Intent pluginIntent = new Intent();
                         pluginIntent.setClassName(
                                 context.getPackageName(),
@@ -165,21 +168,15 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
         for (Map.Entry<String, PluginConfig.PluginFileInfo> plugin : pluginConfig.plugins.entrySet()) {
             final String partKey = plugin.getKey();
             final File apkFile = plugin.getValue().file;
-            Future extractSo = mFixedPool.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    extractSo(uuid, partKey, apkFile);
-                    return null;
-                }
+            Future extractSo = mFixedPool.submit((Callable) () -> {
+                extractSo(uuid, partKey, apkFile);
+                return null;
             });
             futures.add(extractSo);
             if (odex) {
-                Future odexPlugin = mFixedPool.submit(new Callable() {
-                    @Override
-                    public Object call() throws Exception {
-                        oDexPlugin(uuid, partKey, apkFile);
-                        return null;
-                    }
+                Future odexPlugin = mFixedPool.submit((Callable) () -> {
+                    oDexPlugin(uuid, partKey, apkFile);
+                    return null;
                 });
                 futures.add(odexPlugin);
             }
@@ -210,7 +207,9 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
         if (!(context instanceof Activity)) {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
+
         context.startActivity(intent);
+
     }
 
     public Intent convertActivityIntent(InstalledPlugin installedPlugin, String partKey, Intent pluginIntent) throws RemoteException, TimeoutException, FailedException {

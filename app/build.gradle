@@ -4,7 +4,6 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.3"
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -55,9 +54,9 @@ android {
         release {
             signingConfig signingConfigs.release
             debuggable false
-            zipAlignEnabled true
-            shrinkResources true
-            minifyEnabled true
+            zipAlignEnabled false
+            shrinkResources false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             applicationVariants.all { variant ->
                 variant.outputs.all { output ->
@@ -81,6 +80,6 @@ dependencies {
     compileOnly "com.tencent.shadow.core:common:$shadow_version"
     compileOnly "com.tencent.shadow.dynamic:host:$shadow_version"
 
-    compileOnly files("/Users/xingchi/Downloads/PhotoPaint-enigma/mylibrary/build/outputs/jar/mylibrary-debug.jar")
+    //compileOnly files("/Users/xingchi/Downloads/PhotoPaint-enigma/mylibrary/build/outputs/jar/mylibrary-debug.jar")
 
 }
