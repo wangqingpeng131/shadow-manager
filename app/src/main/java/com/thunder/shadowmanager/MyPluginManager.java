@@ -91,6 +91,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
 
         final String partKey = bundle.getString("part_key");
         mProcessServiceName = bundle.getString("process_service_name");
+       String  appVersion = bundle.getString(" app_version");
         final String className = "com.k.b.MainActivity";
         final String pluginZipPath = bundle.getString("p_p");
 //        if (className == null) {
@@ -110,6 +111,7 @@ public class MyPluginManager extends PluginManagerThatUseDynamicLoader {
                     try {
                         InstalledPlugin installedPlugin = installPlugin(context, pluginZipPath, null, true);//这个调用是阻塞的
                         Intent pluginIntent = new Intent();
+                         pluginIntent.putExtra("app_version",appVersion);
                         pluginIntent.setClassName(
                                 context.getPackageName(),
                                 className
