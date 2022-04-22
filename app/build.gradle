@@ -1,10 +1,8 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
-    compileOptions {
+    compileSdkVersion 31
+   /* compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -12,11 +10,11 @@ android {
     // work-runtime-ktx 2.1.0 and above now requires Java 8
     kotlinOptions {
         jvmTarget = "1.8"
-    }
+    }*/
     defaultConfig {
-        applicationId "com.thunder.shadowmanager"
+        applicationId "com.test.shadowmaster"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0.0"
 
@@ -71,13 +69,19 @@ android {
             }
         }
     }
-
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
 
     implementation "com.tencent.shadow.dynamic:manager:$shadow_version"
     compileOnly "com.tencent.shadow.core:common:$shadow_version"
+    implementation "com.tencent.shadow.core:manager:$shadow_version"
+    implementation "com.tencent.shadow.dynamic:loader-impl:$shadow_version"
+
+
     compileOnly "com.tencent.shadow.dynamic:host:$shadow_version"
 
     //compileOnly files("/Users/xingchi/Downloads/PhotoPaint-enigma/mylibrary/build/outputs/jar/mylibrary-debug.jar")
